@@ -9,6 +9,8 @@ current: target
 Sources += $(wildcard *.Rmd *.md *.R *.bst *.bib)
 Sources += presentations/*
 
+Ignore += README.pdf README.docx
+
 autopipeR = defined
 
 ######################################################################
