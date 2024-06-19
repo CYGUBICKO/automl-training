@@ -8,6 +8,7 @@ current: target
 
 Sources += $(wildcard *.Rmd *.md *.R *.bst *.bib)
 Sources += presentations/*
+Sources += data/*
 
 Ignore += README.pdf README.docx
 
