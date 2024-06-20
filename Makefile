@@ -30,7 +30,6 @@ README.docx: README.md
 
 simple_ml_pipeline.Rout: simple_ml_pipeline.R
 
-
 ######################################################################
 
 ### Makestuff
