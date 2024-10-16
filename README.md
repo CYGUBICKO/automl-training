@@ -26,5 +26,17 @@ This training is aimed at equipping Data Community members with the needed **han
 	- Defining hyperparameters
 	- Generative AI report
 	- Key outputs
-	- Writing a reproducible manuscript 
+	- Writing a reproducible manuscript
+
+### Usage
+
+#### Simple usage
+
+- Use ```simple_ml_pipeline.R```
+
+#### Automated complex usage
+
+- This approach uses `Makefile` and `make` rules.
+  - Naviage to `automl-pipeline`
+  - To run the pipeline, see [https://github.com/CYGUBICKO/automl-pipeline](https://github.com/CYGUBICKO/automl-pipeline)
 
