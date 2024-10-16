@@ -1,0 +1,14 @@
+```{r echo = FALSE, results="asis"}
+cat(project_title_logs_GAI_out$outputs, sep = '\n')
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(introduction_logs$outputs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(introduction_logs_improved$outputs, sep = "\n")
+```
+
