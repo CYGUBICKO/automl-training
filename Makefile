@@ -33,6 +33,9 @@ Ignore += prediction_template.csv
 ######################################################################
 
 simple_ml_pipeline.Rout: simple_ml_pipeline.R
+funs.Rout: funs.R
+draft_report.pdf: draft_report.Rmd
+	$(knitpdf)
 
 ######################################################################
 
