@@ -44,6 +44,15 @@ summ_data = function(df) {
   return(out)
 }
 
+### Create directories
+create_dir = function(name = "dir_name") {
+  dir.create(name, showWarnings = FALSE)
+}
+
+### Save table as image
+save_tab_image = function(gt_tab, path) {
+  gt::gtsave(as_gt(gt_tab), file = path)
+}
 
 ### Collect logs
 extract_list_logs = function(log) {
@@ -360,4 +369,127 @@ plot.varimp <- function(x, ..., pos = 0.5, drop_zero = TRUE, top_n=NULL){
 	return(p1)
 }
 
+#### Missing values
 
+missing_prop = function(df) {
+  df = (df
+        |> dplyr::ungroup()
+        |> dplyr::summarise_all(~sum(is.na(.)|. %in% c("", " "))/n())
+        |> tidyr::pivot_longer(everything())
+        |> dplyr::arrange(desc(value))
+        |> dplyr::rename("variable"="name", "missing"="value")
+        |> filter(missing>0)
+        |> dplyr::mutate(missing = scales::percent(missing))
+        |> as.data.frame()
+  )
+  return(df)
+}
+
+
+#### Preprocessing
+
+preprocessFun <- function(df, model_form, corr, handle_missing, exclude=NULL) {
+	df_out = recipe(model_form, data=df)
+	preprocess_result = list()
+	if (anyNA.data.frame(df)) {
+		if (handle_missing == "omit") {
+			df_out = (df_out
+				%>% step_naomit(all_predictors())
+			)
+			preprocess_result$handle_missing = "Delete missing values"
+		} else if (handle_missing== "missing_mean") {
+			df_out = (df_out
+				%>% step_unknown(all_nominal(), new_level = "_Missing_")
+				%>% step_impute_mean(all_numeric())
+			)
+			preprocess_result$handle_missing = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the mean.")
+		} else if (handle_missing=="missing_median") {
+			df_out = (df_out
+				%>% step_unknown(all_nominal(), new_level = "_Missing_")
+				%>% step_impute_median(all_numeric())
+			)
+			preprocess_result$handle_missing = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the median.")
+		} else if (handle_missing=="mode_median") {
+			df_out = (df_out
+				%>% step_impute_mode(all_nominal())
+				%>% step_impute_median(all_numeric())
+			)
+			preprocess_result$handle_missing = c("missing values in categorical variables replacesd by modal value", "missing values in numeric variables replaced by the median.")
+		} else if (handle_missing=="mode_mean") {
+			df_out = (df_out
+				%>% step_impute_mode(all_nominal())
+				%>% step_impute_mean(all_numeric())
+			)
+			preprocess_result$handle_missing = c("Categorical -> Mode", "Numeric -> Mean")
+			preprocess_result$handle_missing = c("missing values in categorical variables replacesd by modal value", "missing values in numeric variables replaced by the mean.")
+		} else if (handle_missing=="bag") {
+			df_out = (df_out
+				%>% step_impute_bag(all_predictors(), all_outcomes())
+			)
+			preprocess_result$handle_missing = c("Bagging")
+		} else if (handle_missing=="knn") {
+			df_out = (df_out
+				%>% step_impute_knn(all_predictors(), all_outcomes())
+			)
+			preprocess_result$handle_missing = c("missing values imputed using KNN.")
+		} else if (handle_missing=="knn_linear") {
+			df_out = (df_out
+				%>% step_impute_knn(all_nominal())
+				%>% step_impute_linear(all_numeric())
+			)
+			preprocess_result$handle_missing = c("missing values in categorical variables replacesd by KNN", "missing values in numeric variables replaced by linear reg/ression.")
+		}
+	}
+	df_out = (df_out
+		%>% step_center(all_numeric_predictors())
+		%>% step_scale(all_numeric_predictors())
+	)
+	if (is.null(exclude)) {
+		df_out = (df_out
+			%>% step_nzv(all_predictors())
+		)
+	} else {
+		df_out = (df_out
+			%>% step_nzv(all_predictors(), -all_of(exclude))
+		)
+	}
+	preprocess_result$handle_predictors = c("All numeric variables were centered and scaled and variables with near zero variance removed.")
+	if (corr > 0) {
+		if (is.null(exclude)) {
+			df_out = (df_out
+				%>% step_corr(all_numeric_predictors(), threshold=corr)
+			)
+		} else {
+			df_out = (df_out
+				%>% step_corr(all_numeric_predictors(), -all_of(exclude), threshold=corr)
+			)
+		}
+		preprocess_result$correlated_predictors = paste0("One of the variables which had a bivariate correlation of at least ", corr, " were droped.")
+	}
+	df_out = (df_out
+		%>% prep()
+		%>% bake(new_data=df)
+	)
+	removed_vars = colnames(df)[!colnames(df) %in% colnames(df_out)]
+	preprocess_result$n_removed_vars = if(length(removed_vars)) paste0(length(removed_vars), " variabels were removed after preprocessing.") else  NULL 
+	preprocess_result$removed_vars = if(length(removed_vars)) paste0(removed_vars, collapse=",") else NULL
+	preprocess_result$predictors_for_analysis = paste0(outcome_var, " was used as an outcome variable, while the following were used as predictors: ", paste0(colnames(df_out)[!colnames(df_out) %in% outcome_var], collapse=", "), ".")
+	return(list(df_processed=df_out, df_original=df, preprocess_steps=preprocess_result))
+}
+
+# preprocessfun = function(df, model_form, corr_threshold) {
+# 	x = (recipe(model_form, data=df)
+# 	  |> step_unknown(all_nominal(), new_level = "_Missing_")
+#     # |> step_impute_mean(all_numeric_predictors())
+#     # |> step_impute_mode(all_nominal_predictors())
+#     # |> step_impute_median(all_numeric_predictors())
+#     # |> step_impute_bag(all_predictors(), all_outcomes())
+# 		|> step_center(all_numeric_predictors())
+# 		|> step_scale(all_numeric_predictors())
+# 		|> step_nzv(all_predictors())
+# 		|> step_corr(all_numeric_predictors(), threshold=corr_threshold)
+# 		|> prep()
+# 	  |> bake(new_data=df)
+# 	)
+# 	return(x)
+# }

@@ -25,6 +25,10 @@ autopipeR = defined
 README.pdf: README.md
 README.docx: README.md
 
+Ignore += api_config.ini
+Ignore += automl-pipeline/*
+Ignore += draft_report.docx
+Ignore += prediction_template.csv
 
 ######################################################################
 

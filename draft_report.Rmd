@@ -2,13 +2,102 @@
 cat(project_title_logs_GAI_out$outputs, sep = '\n')
 ```
 
+# Introduction
 
 ```{r echo = FALSE,  results="asis"}
 cat(introduction_logs$outputs, sep = "\n")
 ```
 
+# Methods
 
 ```{r echo = FALSE,  results="asis"}
-cat(introduction_logs_improved$outputs, sep = "\n")
+cat(data_transform_logs$outputs, sep = "\n")
 ```
+
+
+# Results
+
+## Descriptives
+
+```{r echo = FALSE,  results="asis"}
+cat(table1_interpete_logs$outputs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(table1_logs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(descriptive_auto_plots_logs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(descriptive_auto_include_plots_logs$outputs, sep = "\n")
+```
+
+## Model comparison
+
+```{r echo = FALSE,  results="asis"}
+cat(trained_models_logs$outputs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(trained_models_metric_logs, sep = "\n")
+```
+
+```{r echo = FALSE,  results="asis"}
+cat(trained_models_metric_include_logs$outputs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(trained_models_roc_logs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(trained_models_roc_include_logs$outputs, sep = "\n")
+```
+
+## Variable importance
+
+```{r echo = FALSE,  results="asis"}
+cat(varimp_best_model_logs, sep = "\n")
+```
+
+
+```{r echo = FALSE,  results="asis"}
+cat(varimp_best_model_include_logs$outputs, sep = "\n")
+```
+
+
+
+```{r echo = FALSE,  results="asis"}
+cat(varfreq_plot_logs, sep = "\n")
+```
+
+
+
+```{r echo = FALSE,  results="asis"}
+cat(varfreq_plot_include_logs$outputs, sep = "\n")
+```
+
+
+# Discussion
+
+```{r echo = FALSE,  results="asis"}
+cat(discussion_logs$outputs, sep = "\n")
+```
+
+
+# Conclussion
+
+```{r echo = FALSE,  results="asis"}
+cat(conclussion_logs$outputs, sep = "\n")
+```
+
 

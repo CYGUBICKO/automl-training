@@ -4,6 +4,8 @@ library(recipes)
 library(forcats)
 library(dplyr)
 
+library(gtsummary)
+
 library(GGally)
 library(ggplot2)
 
@@ -15,7 +17,10 @@ library(gemini.R)
 #### ---- Set up ------------------------------------------------- ####
 
 set.seed(911)
+current_path = dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(current_path)
 
+experiment_name = "heart_study_01"
 study_description = "Heart disease. Collected in the US. In 1991."
 problem_type = "classification"
 
@@ -25,12 +30,13 @@ train_test_ratio = 0.75
 corr_threshold = 0.8
 
 performance_metric = "Accuracy"
-
 report_metric = "AUCROC"
-
 outcome_var = "class"
+handle_missing = "omit"
 
-model_form = as.formula(paste0(outcome_var, "~."))
+cv_method = "cv"
+cv_repeats = 5
+n_folds = 10
 
 nreps = 200
 top_n_best = 2
@@ -38,7 +44,7 @@ top_n_varimp = 3
 top_n_rank = 5
 total_n_rank = 20
 
-request_text = "Help me write a description in paragraph form. Provide details."
+max_tockens = 10000
 
 source("funs.R")
 ggtheme()
@@ -50,58 +56,113 @@ base::readRenviron("~/.Renviron")
 api_key = Sys.getenv("GEMINE_API_KEY")
 setAPI(api_key)
 
+## Create outputs folder
+output_path = paste0(current_path, "/", paste0("outputs_", experiment_name))
+create_dir(output_path)
+
 #### Project title
 project_title_logs_GAI = gemini_chat(paste0("Help improve the below, as a title for a journal submission: ", study_description))
-project_title_logs_GAI_out = gemini_chat("Pick the best. Only give the answer and format as .md title, centered.", history = project_title_logs_GAI$history)
+project_title_logs_GAI_out = gemini_chat("Pick the best. Only give the answer and format as markdown title. Do not format the code", history = project_title_logs_GAI$history)
 
 #### ---- Load data ---------------------------------------------- ####
 
+model_form = as.formula(paste0(outcome_var, "~."))
 df = readr::read_csv(data_path)
 head(df)
 
 ##### ----- Data dimension --------------------------------------- ####
 df_dim = dim(df)
 df_dim = list("Observations"=df_dim[[1]], "Features"=df_dim[[2]])
-context_logs = collect_logs(desc = project_title_logs_GAI_out$outputs
+context_logs = collect_logs(desc = paste0(project_title_logs_GAI_out$outputs, "The dataset has ")
   , extract_list_logs(df_dim)
   , add_info = ""
 )
 
+##### ----- Variables in the data --------------------------------------- ####
+predictor_vars = colnames(df)[!colnames(df) %in% outcome_var]
+vars_df = list("Outcome" = outcome_var, "Predictors" = paste0(predictor_vars, collapse = ","))
+context_logs = collect_logs(desc = paste0(context_logs, "With the following ")
+  , extract_list_logs(vars_df)
+  , add_info = paste0("This is a ", problem_type, " problem to predict ", outcome_var)
+)
+
+introduction_logs = gemini_chat(paste0("Based on the information below, write the introduction for the manuscript. Make it very detailed, including background, justification, objectives, methodology, etc ", context_logs), maxOutputTokens = max_tockens)
+
 #### ---- Data management ---------------------------------------------- ####
 
-#### ---- Explore data ------------------------------------------------- ####
-skim = skimr::skim(df)
-summ = summ_data(df)
+##### ---- Explore data ------------------------------------------------- ####
 
-desc_stats_logs = collect_logs(desc = paste0(context_logs, "With the following descriptives generated from R: ")
-  , log = extract_list_logs(summ)
-  , add_info = request_text
+# skim = (df
+#   |> skimr::skim()
+# )
+# summ = summ_data(df)
+summ = (df
+  |> tbl_summary(by=all_of(outcome_var))
 )
-introduction_logs = gemini_chat(
-  paste0('Help me write an introduction for the journal manuscript, based on the following information. Make it very detailed and include literature. Only give the answer'
-    , project_title_logs_GAI_out$outputs
-  )
-)
+tab1_name = paste0(output_path, "/table1.png")
+save_tab_image(summ, tab1_name)
 
-introduction_logs_improved = gemini_chat("The main aim of the study is to predict heart condition based on the clinical and demographic variables. Incorporate this in the the output.", history = introduction_logs$history)
+request_text = "Use the image from gtsummary package attached. Create a caption and .md table 1 for manuscript submission. Provide only the output"
+table1_logs = gemini_image(image = tab1_name, prompt = request_text, maxOutputTokens = 10000)
+table1_interpete_logs = gemini_chat(prompt = paste0("Provide detailed interpretation of Table 1 for manuscript submission. Make it detailed only give the answer : ", table1_logs))
 
-# c1 = gemini_chat(desc_stats_logs_GAI)
-# c1 = gemini_chat("Help me generate table", c1$history)
-# print(c1)
 
 #### ---- Data transformation ----------------------------------------- #####
-df = (df
-	|> mutate(class = as.factor(class)
-		, class = fct_recode(class, "Yes" = "1", "No" = "0")
-		, class = relevel(class, ref="Yes")
-		, sex = fct_recode(as.factor(sex), "Male" = "1", "Female" = "0")
-	)
+data_management = TRUE
+if (data_management) {
+  df = (df
+  	|> mutate(class = as.factor(class)
+  		, class = fct_recode(class, "Yes" = "1", "No" = "0")
+  		, class = relevel(class, ref="Yes")
+  		, sex = fct_recode(as.factor(sex), "Male" = "1", "Female" = "0")
+  	)
+  )
+
+  #### Add any data management steps here as a vector
+  request_text = c("Changed class to factor and assigned 1 to yes and 0 to no"
+    , "In sex variable, assigned 1 to male and 0 to female"
+  )
+  data_transform_logs = gemini_chat(
+    prompt = paste0("The following data management steps were performed. Write a detailed methods section for the manuscript. ", paste0(request_text, collapse = ""))
+    , history = introduction_logs$history
+  )
+} else {
+  data_transform_logs = ""
+}
+
+##### ---- Missing values ----
+miss_df = (df
+  |> missing_prop()
+)
+
+if (NROW(miss_df)) {
+  miss_prop = paste0(miss_df$variable, " is ", miss_df$missing, collapse = ", ")
+} else {
+  miss_prop = "There were no missing values"
+}
+data_transform_logs = gemini_chat(prompt = paste0("Update the methods based on the following, make it detailed and provide final answer", miss_prop)
+  , history = data_transform_logs$history
+  , maxOutputTokens = max_tockens
 )
 
 ##### ---- Data visualization ------------------------------------------ ####
+
+##### -- Auto plots -----
+descriptive_auto_plots = ggbivariate(df, outcome = outcome_var)
+image_path = paste0(output_path, "/descriptive_auto_plots.png")
+ggsave(image_path
+  , plot = descriptive_auto_plots
+  , width = 20
+  , height = 50
+  , units = "cm"
+)
+context_logs = "Provide a detailed interpretaion of the image. Call it Figure 1."
+descriptive_auto_plots_logs = gemini_image(image = image_path, prompt = context_logs, maxOutputTokens = max_tockens)
+descriptive_auto_include_plots_logs = gemini_chat(paste0("Insert the Figure 1 into .md file. Include caption. Resize figure height by 50% to fit the page. ", image_path, "Avoid code formating. Provide answer only."))
+
+##### -- Individual plots -----
 all_vars = colnames(df)
 var_labels = all_vars
-## ggbivariate(df, outcome = outcome_var)
 compare_plot = sapply(unique(all_vars), function(x) {
   index = all_vars %in% x
   .labs = var_labels[index]
@@ -113,7 +174,9 @@ compare_plot = sapply(unique(all_vars), function(x) {
       + theme(legend.position="bottom")
       + labs(title=.labs)
     )
-    print(p)
+    fname = paste0(output_path, "/", x, "_", outcome_var, ".png")
+    ggsave(filename = fname, plot = p)
+    return(p)
   }
 }, simplify = FALSE)
 
@@ -125,6 +188,16 @@ index = createDataPartition(df[[outcome_var]]
 	, list = FALSE
 )
 
+context_logs = paste0("The data was partitioned into training and test based on the "
+  , train_test_ratio
+  , " proportion. "
+  , "The analysis is conducted in "
+  , R.version$version.string
+)
+data_transform_logs = gemini_chat(prompt = paste0("Update the methods based on the following, make it detailed and provide final answer", context_logs)
+  , history = data_transform_logs$history
+  , maxOutputTokens = max_tockens
+)
 
 ##### ---- Training data ------------------------------------------- ####
 train_df =  df[index, ]
@@ -134,32 +207,38 @@ test_df = df[-index, ]
 
 #### ---- Data preprocessing ------------------------------------------- ####
 
-#### TODO: Handle missing values
+train_objs = preprocessFun(df = train_df
+  , model_form
+  , corr = corr_threshold
+  , handle_missing = handle_missing
+)
+train_df = train_objs$df_processed
+preprocess_result = paste0(train_objs$preprocess_steps, collapse = "; ")
 
-preprocessfun = function(df, model_form) {
-	x = (recipe(model_form, data=df)
-##		|> step_unknown(all_nominal(), new_level = "_Missing_")
-##		|> step_impute_mean(all_numeric())
-##		|> step_impute_mode(all_nominal())
-##		|> step_impute_median(all_numeric())
-##		|> step_impute_bag(all_predictors(), all_outcomes())
-		|> step_center(all_numeric_predictors())
-		|> step_scale(all_numeric_predictors())
-		|> step_nzv(all_predictors())
-		|> step_corr(all_numeric_predictors(), threshold=corr_threshold)
-		|> prep()
-	  |> bake(new_data=df)
-	)
-	return(x)
+if (!is.null(train_objs$preprocess_steps$removed_vars)) {
+  excluded_vars = train_objs$preprocess_steps$removed_vars
+  excluded_vars = strsplit(excluded_vars, ",")[[1]]
+} else {
+  excluded_vars = NULL
 }
 
-train_df = preprocessfun(train_df, model_form)
-test_df = preprocessfun(test_df, model_form)
+test_objs = preprocessFun(df = test_df
+  , model_form
+  , corr = corr_threshold
+  , handle_missing = handle_missing
+  , exclude = excluded_vars
+)
+test_df = test_objs$df_processed
+
+data_transform_logs = gemini_chat(prompt = paste0("Update the methods based on the following, make it detailed and provide final answer", preprocess_result)
+  , history = data_transform_logs$history
+  , maxOutputTokens = max_tockens
+)
 
 #### ---- Training control params ----------------------------------- ####
-training_control = trainControl(method = "cv"
-#	, repeats = 5
-	, number = 10
+training_control = trainControl(method = cv_method
+	, repeats = cv_repeats
+	, number = n_folds
 	, search = "grid"
 	, classProbs = ifelse(problem_type=="classification", TRUE, FALSE)
 	, summaryFunction = ifelse(problem_type=="classification", twoClassSummary, defaultSummary)
@@ -212,6 +291,7 @@ gbm_train
 model_name_ = "Gradient boosting"
 gbm_train$model_name_ = model_name_
 
+#### Add models here
 
 #### ---- Predictive performance ------------------------------------------####
 
@@ -237,8 +317,20 @@ if (problem_type=="classification") {
 	positive_class = NULL 
 }
 metric_df[, c("lower", "estimate", "upper")] = sapply(metric_df[, c("lower", "estimate", "upper")], function(x){round(x, 3)})
+metric_df$model_score = paste0(metric_df$model, " with ", metric_df$metric, " score of ", metric_df$estimate, "[", metric_df$lower, ", ", metric_df$upper, "]")
 
-# metric_df$model_score = paste0(metric_df$model, " with ", metric_df$metric, " score of ", metric_df$estimate, "[", metric_df$lower, ", ", metric_df$upper, "]")
+context_logs = paste0("The following models were trained: ", paste0(unique(metric_df$model), collapse = ", "), ". We applied ", n_folds, " cross-validation and used ", performance_metric, " to pick the best performing model.")
+context_logs = paste0(context_logs, " To evaluate the sensitivity and uncertainty of the predictive performance measures, we applied bootstrap resampling to estimate the 2.5%, 50% and 97.5% quantiles of the distribution of the scores. We used ",  nreps, " bootstrap resamples of the test data", ".")
+data_transform_logs = gemini_chat(prompt = paste0("Update the methods based on the following, make it detailed and provide final answer", context_logs)
+  , history = data_transform_logs$history
+  , maxOutputTokens = max_tockens
+)
+
+context_logs = paste0("We applied and compared the following models: ", paste0(unique(metric_df$model_score), collapse=", "), ".")
+trained_models_logs = gemini_chat(prompt = paste0("Write Model comparison section. Make it very detailed. ", context_logs)
+  , history = table1_interpete_logs$history
+  , maxOutputTokens = max_tockens
+)
 
 ##### -------------------------- Plot metrics ----------------------------- ####
 pos = position_dodge(0.05)
@@ -254,6 +346,18 @@ metric_plot = (ggplot(metric_df, aes(x=reorder(model, -estimate), y=estimate))
 	)
 )
 print(metric_plot)
+
+image_path = paste0(output_path, "/metric_plot_", performance_metric, ".png")
+ggsave(image_path
+  , plot = metric_plot
+  , height = 12
+  , width = 15
+  , units = "cm"
+)
+context_logs = "Provide a detailed interpretaion of the image. Call it Figure 2."
+trained_models_metric_logs = gemini_image(image = image_path, prompt = context_logs, maxOutputTokens = max_tockens)
+trained_models_metric_include_logs = gemini_chat(paste0("Insert the Figure 2 into .md file. Include caption. Resize figure height by 50% to fit the page. ", image_path, "Avoid code formating. Provide answer only."))
+
 
 ##### ----- ROC Curve -------------------------------------------------- ####
 if (problem_type=="classification") {
@@ -282,6 +386,21 @@ if (problem_type=="classification") {
 		+ theme(legend.position="right")
 	)
 	print(roc_plot)
+
+
+  image_path = paste0(output_path, "/metric_plot_", "roc", ".png")
+  ggsave(image_path
+    , plot = roc_plot
+    , height = 12
+    , width = 15
+    , units = "cm"
+  )
+  context_logs = "Provide a detailed interpretaion of the image. Call it Figure 3."
+  trained_models_roc_logs = gemini_image(image = image_path, prompt = context_logs, maxOutputTokens = max_tockens)
+  trained_models_roc_include_logs = gemini_chat(paste0("Insert the Figure 3 into .md file. Include caption. Resize figure height by 50% to fit the page. ", image_path, "Avoid code formating. Provide answer only."))
+} else {
+  trained_models_roc_logs = ""
+  trained_models_roc_include_logs = ""
 }
 
 
@@ -321,8 +440,20 @@ varimp_topn_df = (varimp_all_df
 	%>% filter(model %in% best_model)
 )
 
-p1 = plot(varimp_topn_df)
-print(p1)
+varimp_all_plot = plot(varimp_topn_df)
+print(varimp_all_plot)
+
+image_path = paste0(output_path, "/varimp_plot_best_model.png")
+ggsave(image_path
+  , plot = varimp_all_plot
+  , height = 12
+  , width = 15
+  , units = "cm"
+)
+
+context_logs = paste0("Interpret the permutation-based variable importance plot attached. Call it Figure 4. The performance measure metric is ", performance_metric)
+varimp_best_model_logs = gemini_image(image = image_path, prompt = context_logs, maxOutputTokens = max_tockens)
+varimp_best_model_include_logs = gemini_chat(paste0("Insert the Figure 4 into .md file. Include caption.", image_path, "Avoid code formating. Provide answer only."))
 
 best_vars = (varimp_topn_df
 	%>% group_by(model)
@@ -382,6 +513,31 @@ varfreq_plot = (ggplot(varfreq_df, aes(x=pos, y=fct_reorder(new_terms, -pos, .fu
 )
 print(varfreq_plot)
 
+image_path = paste0(output_path, "/varfreq_plot.png")
+ggsave(image_path
+  , plot = varfreq_plot
+  , height = 15
+  , width = 15
+  , units = "cm"
+)
+
+context_logs = paste0("Interpret the variable importance ranking plot based on the fitted models: ", paste0(unique(metric_df$model), collapse = ", "))
+varfreq_plot_logs = gemini_image(image = image_path, prompt = context_logs, maxOutputTokens = max_tockens)
+varfreq_plot_include_logs = gemini_chat(paste0("Insert the Figure 5 into .md file. Include caption.", image_path, "Avoid code formating. Provide answer only."))
+
+#### ---- Discussion -------------------------------------------------- #####
+
+discussion_logs = gemini_chat(prompt = "Write a detailed discussion for manuscript"
+  , history = data_transform_logs$history
+)
+discussion_logs = gemini_chat(prompt = paste0("Based on the attached result. Update the discussion.", varimp_best_model_logs[[1]])
+  , history = discussion_logs$history
+)
+
+#### ---- Conclussion -------------------------------------------------- #####
+conclussion_logs = gemini_chat(prompt = "Write conclussion for the manuscript"
+  , history = discussion_logs$history
+)
 
 
 #### ---- Prediction -------------------------------------------------- #####
