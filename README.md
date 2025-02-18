@@ -1,6 +1,6 @@
 ## AUTOML Training Repo
 
-The pipeline integrates gemini API via (gemini.R package)[https://cran.r-project.org/web/packages/gemini.R/index.html] into the auto-ml pipeline. The integration allows for automated interpretation of key outputs.
+The pipeline integrates gemini API via [gemini.R package]([https://cran.r-project.org/web/packages/gemini.R/index.html) into the auto-ml pipeline. The integration allows for automated interpretation of key outputs.
 
 ## Illustrations
 
