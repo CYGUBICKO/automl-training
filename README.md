@@ -1,30 +1,28 @@
 ## AUTOML Training Repo
 
-This repo contains all the materials used during the **Data Community meeting** at APHRC on **2024 Jun 20 (Thur)**.
+The pipeline integrates gemini API via (gemini.R package)[https://cran.r-project.org/web/packages/gemini.R/index.html] into the auto-ml pipeline. The integration allows for automated interpretation of key outputs.
 
-### Introduction
+## Illustrations
 
-This training is aimed at equipping Data Community members with the needed **hands-on** skills to utilize **linux** environment to implement reproducible ML/AI pipeline. 
+- DSWB AGM 2025 (2025 Feb 22 - 23)
+- Data Community meeting at APHRC on 2024 Jun 20 (Thur)
+
 
 ### Requirements
 
-- Sign up for [Github](https://github.com/) account (If you don't have one).
-- Liaise with **Michael** from ICT to help you install [WSL](https://github.com/CYGUBICKO/wsl-setup) as documented [here](https://github.com/CYGUBICKO/wsl-setup).
-- Learn some basic **Linux** commands from [here](https://ubuntu.com/tutorials/command-line-for-beginners#1-overview) or [here](https://www.crio.do/blog/20-basic-linux-commands/).
-- Learn some basic **Makefile** rules from [here](https://makefiletutorial.com/)
-- Learn basic **Vim** editor commands from [here]()
+- Get [Gemini API](https://makersuite.google.com/app/apikey)
+- Create a file in the path `~/.Renviron` and paste the API key, i.e.,
 
-### Outline
+```
+GEMINE_API_KEY=YOUR_API_KEY
+```
+- Save and close
 
-- Simple linux commands
-- Simple Makefile rules
-- Implementation of a simple ML workflow in R/Rstudio 
-- Introduction to AUTOML pipeline
-	- Key features 
-	- Example with default settings
-	- Changing config files
-	- Defining hyperparameters
-	- Generative AI report
-	- Key outputs
-	- Writing a reproducible manuscript 
+###  Usage
+
+- Open `simple_ml_pipeline.R` from your preferred editor (Rstudio recommended) and run line by line for default usage. Once you familiarize with the codebase, you can change the data via `data_path`, etc.
+
+### Advance pipeline
+
+- See [AUTOML Pipeline](https://github.com/CYGUBICKO/automl-pipeline)
 
