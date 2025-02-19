@@ -39,7 +39,7 @@ GEMINE_API_KEY=YOUR_API_KEY
 	- `performance_metric` - Measure of model performance
 		- For regression: "RMSE", "Rsquared", "MAE"
 		- For classification: "AUCROC", "Accuracy", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F"
-		- `report_metric` - Depending on the task, it can be any of the above
+	- `report_metric` - Depending on the task, it can be any of the above
 
 	
 
