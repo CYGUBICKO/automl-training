@@ -7,9 +7,9 @@ current: target
 ######################################################################
 
 Sources += $(wildcard *.Rmd *.md *.R *.bst *.bib)
-Sources += presentations/*
 Sources += data/*
 
+Ignore += presentations/*
 Ignore += README.pdf README.docx
 
 autopipeR = defined
@@ -43,6 +43,7 @@ draft_report.pdf: draft_report.Rmd
 
 ## Presentation
 Ignore += machine_learning_concepts.Rmd
+Ignore += machine_learning_concepts.pdf
 machine_learning_concepts.pdf: machine_learning_concepts.Rmd
 	$(knitbeamer)
 
