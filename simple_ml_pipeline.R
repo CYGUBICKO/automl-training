@@ -1,4 +1,4 @@
-library(caret) ## ML piple
+library(caret) 
 library(recipes) 
 
 library(forcats)
@@ -416,7 +416,8 @@ if (problem_type=="classification") {
   trained_models_roc_include_logs = gemini_chat(paste0("Insert the Figure 3 into .md file. Include caption. Resize figure height by 50% to fit the page. ", image_path, "Avoid code formating. Provide answer only."))
 } else {
   trained_models_roc_logs = ""
-  trained_models_roc_include_logs = ""
+  trained_models_roc_include_logs = list()
+  trained_models_roc_include_logs$outputs = ""
 }
 
 
@@ -578,9 +579,8 @@ preds = do.call("rbind", preds)
 
 
 #### ---- Generate Report ------------------------------------------------ ####
-
 rmarkdown::render(
   input = "draft_report.Rmd",
-  output_file = "draft_report.docx",
+  output_file = paste0(output_path, '/draft_report.docx'),
   envir = parent.frame()
 )
