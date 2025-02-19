@@ -10,6 +10,8 @@ The pipeline integrates gemini API via [gemini.R package](https://cran.r-project
 
 ### Requirements
 
+#### Gemini API
+
 - Get [Gemini API](https://makersuite.google.com/app/apikey)
 - Create a file in the path `~/.Renviron` and paste the API key, i.e.,
 
@@ -17,6 +19,27 @@ The pipeline integrates gemini API via [gemini.R package](https://cran.r-project
 GEMINE_API_KEY=YOUR_API_KEY
 ```
 - Save and close
+
+#### R packages
+
+- Install the following R packages
+
+```
+install.packages(caret) 
+install.packages(recipes)
+install.packages(forcats)
+install.packages(dplyr)
+install.packages(gtsummary)
+install.packages(GGally)
+install.packages(ggplot2)
+install.packages(MLmetrics)
+install.packages(ROCR)
+install.packages(gemini.R)
+install.package(naniar)
+
+devtools::install_github("aphrc-nocode/Rautoml")
+
+```
 
 ###  Usage
 
@@ -40,6 +63,7 @@ GEMINE_API_KEY=YOUR_API_KEY
 		- For regression: "RMSE", "Rsquared", "MAE"
 		- For classification: "AUCROC", "Accuracy", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F"
 	- `report_metric` - Depending on the task, it can be any of the above
+
 
 	
 
