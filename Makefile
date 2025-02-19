@@ -30,12 +30,21 @@ Ignore += automl-pipeline/*
 Ignore += draft_report.docx
 Ignore += prediction_template.csv
 
+knitbeamer = Rscript -e "library(rmarkdown); render(\"$<\", beamer_presentation())"
+
 ######################################################################
 
 simple_ml_pipeline.Rout: simple_ml_pipeline.R
 funs.Rout: funs.R
 draft_report.pdf: draft_report.Rmd
 	$(knitpdf)
+
+######################################################################
+
+## Presentation
+Ignore += machine_learning_concepts.Rmd
+machine_learning_concepts.pdf: machine_learning_concepts.Rmd
+	$(knitbeamer)
 
 ######################################################################
 
