@@ -11,20 +11,21 @@ data_transform_logs$history = list()
 if (!data_management) {
   if (problem_type=="classification") {
     l = unique(df[[outcome_var]])
-    f = paste0("level_", l)
-    b = f[1]
-    df = (df
-      |> mutate_at(outcome_var, function(x){
-        x = factor(x, levels=l, labels = f)
-        x =  relevel(x, ref=b)
-      })
-    )
-    request_text = paste0("The outcome variable", outcome_var, " was converted factor ")
-
-    data_transform_logs = gemini_chat(
-      prompt = paste0("The following data management steps were performed. Write a detailed methods section for the manuscript. ", paste0(request_text, collapse = ""))
-      , history = introduction_logs$history
-    )
+    if (any(class(l) %in% c("numeric", "integer", "double"))) {
+      f = paste0("level_", l)
+      b = f[1]
+      df = (df
+        |> mutate_at(outcome_var, function(x){
+          x = factor(x, levels=l, labels = f)
+          x =  relevel(x, ref=b)
+        })
+      )
+      request_text = paste0("The outcome variable", outcome_var, " was converted factor ")
+      data_transform_logs = gemini_chat(
+        prompt = paste0("The following data management steps were performed. Write a detailed methods section for the manuscript. ", paste0(request_text, collapse = ""))
+        , history = introduction_logs$history
+      )
+    }
   }
 } else {
   df = (df
