@@ -3,7 +3,7 @@
 data_management = TRUE
 data_transform_logs = list()
 data_transform_logs$outputs = ""
-data_transform_logs$history = ""
+data_transform_logs$history = list()
 
 ##### Include all the DM scripts here.
 ##### To run default, without DM, set data_management = FALSE
