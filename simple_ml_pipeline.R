@@ -22,7 +22,7 @@ setwd(current_path)
 
 ## Study
 
-experiment_name = "heart_study_01"
+experiment_name = "heart_study_03"
 study_description = "Heart disease. Collected in the US. In 1991."
 
 ## Data
@@ -124,29 +124,9 @@ table1_interpete_logs = gemini_chat(prompt = paste0("Provide detailed interpreta
 
 
 #### ---- Data transformation ----------------------------------------- #####
-data_management = TRUE
-if (data_management) {
-  df = (df
-  	|> mutate(class = as.factor(class)
-  		, class = fct_recode(class, "Yes" = "1", "No" = "0")
-  		, class = relevel(class, ref="Yes")
-  		, sex = fct_recode(as.factor(sex), "Male" = "1", "Female" = "0")
-  	)
-  )
+source("data_management.R")
 
-  #### Add any data management steps here as a vector
-  request_text = c("Changed class to factor and assigned 1 to yes and 0 to no"
-    , "In sex variable, assigned 1 to male and 0 to female"
-  )
-  data_transform_logs = gemini_chat(
-    prompt = paste0("The following data management steps were performed. Write a detailed methods section for the manuscript. ", paste0(request_text, collapse = ""))
-    , history = introduction_logs$history
-  )
-} else {
-  data_transform_logs = ""
-}
-
-##### ---- Missing values ----
+##### ---- Missing values ----------------------------------------- #####
 miss_df = (df
   |> missing_prop()
 )
@@ -473,11 +453,11 @@ varimp_best_model_logs = gemini_image(image = image_path, prompt = context_logs,
 varimp_best_model_include_logs = gemini_chat(paste0("Insert the Figure 4 into .md file. Include caption.", image_path, "Avoid code formating. Provide answer only."))
 
 best_vars = (varimp_topn_df
-	%>% group_by(model)
-	%>% arrange(desc(Overall), .by_group=TRUE)
-	%>% mutate(.n = 1:n())
-	%>% filter(.n <= min(top_n_varimp, length(unique(varimp_topn_df$terms))))
-	%>% pull(terms)
+	%>% dplyr::group_by(model)
+	%>% dplyr::arrange(desc(Overall), .by_group=TRUE)
+	%>% dplyr::mutate(.n = 1:n())
+	%>% dplyr::filter(.n <= min(top_n_varimp, length(unique(varimp_topn_df$terms))))
+	%>% dplyr::pull(terms)
 	%>% unique()
 )
 top_n = length(best_vars)
@@ -549,11 +529,13 @@ discussion_logs = gemini_chat(prompt = "Write a detailed discussion for manuscri
 )
 discussion_logs = gemini_chat(prompt = paste0("Based on the attached result. Update the discussion.", varimp_best_model_logs[[1]])
   , history = discussion_logs$history
+  , maxOutputTokens = max_tockens
 )
 
 #### ---- Conclussion -------------------------------------------------- #####
 conclussion_logs = gemini_chat(prompt = "Write conclussion for the manuscript"
   , history = discussion_logs$history
+  , maxOutputTokens = max_tockens
 )
 
 
@@ -577,6 +559,16 @@ preds = sapply(ls(pattern = "_train$"), function(x){
 }, simplify=FALSE)
 preds = do.call("rbind", preds)
 
+#### Gather all
+# combined_output = paste0(project_title_logs_GAI_out$outputs
+#   , introduction_logs$outputs
+#   , data_transform_logs$outputs
+#   , table1_interpete_logs$outputs
+#   , table1_logs, descriptive_auto_plots_logs
+#   , descriptive_auto_include_plots_logs$outputs
+#   , trained_models_logs$outputs
+#   , collapse = " "
+# )
 
 #### ---- Generate Report ------------------------------------------------ ####
 rmarkdown::render(
@@ -584,3 +576,5 @@ rmarkdown::render(
   output_file = paste0(output_path, '/draft_report.docx'),
   envir = parent.frame()
 )
+
+
