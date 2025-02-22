@@ -48,7 +48,7 @@ devtools::install_github("aphrc-nocode/Rautoml")
 - Open `simple_ml_pipeline.R` from your preferred editor (Rstudio recommended) and run line by line for default usage. Once you familiarize with the codebase, you can change the data via `data_path`, etc.
 - Edit [upload_data.R](upload_data.R) to specify data
 - Edit [model_config.R](model_config.R) to change default parameters outline above.
-- Edit the (data_management.R)[data_management.R] file to add any data transformations needed.
+- Edit the [data_management.R](data_management.R) file to add any data transformations needed.
 	- `data_management` - `TRUE/FALSE`. Set to `FALSE` for default.
 
 #### Key components
