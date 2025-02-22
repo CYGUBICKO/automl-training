@@ -25,17 +25,17 @@ GEMINE_API_KEY=YOUR_API_KEY
 - Install the following R packages
 
 ```
-install.packages(caret) 
-install.packages(recipes)
-install.packages(forcats)
-install.packages(dplyr)
-install.packages(gtsummary)
-install.packages(GGally)
-install.packages(ggplot2)
-install.packages(MLmetrics)
-install.packages(ROCR)
-install.packages(gemini.R)
-install.package(naniar)
+install.packages("caret") 
+install.packages("recipes")
+install.packages("forcats")
+install.packages("dplyr")
+install.packages("gtsummary")
+install.packages("GGally")
+install.packages("ggplot2")
+install.packages("MLmetrics")
+install.packages("ROCR")
+install.packages("gemini.R")
+install.packages("naniar")
 
 devtools::install_github("aphrc-nocode/Rautoml")
 
