@@ -64,7 +64,9 @@ devtools::install_github("aphrc-nocode/Rautoml")
 		- For classification: "AUCROC", "Accuracy", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F"
 	- `report_metric` - Depending on the task, it can be any of the above
 
-- Edid the (data_management.R)[data_management.R] file to add any data transformations needed.
+- Edit (upload_data.R)[upload_data.R] to specify data
+- Edit (model_config.R)[model_config.R] to change default parameters outline above.
+- Edit the (data_management.R)[data_management.R] file to add any data transformations needed.
 	- `data_management` - `TRUE/FALSE`. Set to `FALSE` for default.
 	
 

@@ -20,43 +20,19 @@ set.seed(911)
 current_path = dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(current_path)
 
-## Study
+#### ---- Load data ---------------------------------------------- ####
+source("upload_data.R")
 
-experiment_name = "heart_study_03"
-study_description = "Heart disease. Collected in the US. In 1991."
+model_form = as.formula(paste0(outcome_var, "~."))
 
-## Data
-data_path = "https://raw.githubusercontent.com/i-dair-tech/i-dair-codex-data/refs/heads/main/simulate_data/heart_data.csv"
+## Read data
+class(data_path) = Rautoml::get_file_ext(data_path)
+df = Rautoml::upload_data(data_path)
+head(df)
 
-## Modelling
-problem_type = "classification"
-outcome_var = "class"
+#### ---- Load data ---------------------------------------------- ####
 
-## Data partition
-train_test_ratio = 0.75
-
-## Feature engineering
-corr_threshold = 0.8
-handle_missing = "omit"
-
-## Cross-validation
-cv_method = "cv"
-cv_repeats = 5
-n_folds = 10
-
-## Performance measures
-performance_metric = "Accuracy"
-report_metric = "AUCROC"
-
-## Bootstrapping
-nreps = 200
-top_n_best = 2
-top_n_varimp = 3
-top_n_rank = 5
-total_n_rank = 20
-
-## Tokens in Gemini
-max_tockens = 10000
+source("model_config.R")
 
 ## Useful functions
 source("funs.R")
@@ -77,14 +53,6 @@ create_dir(output_path)
 project_title_logs_GAI = gemini_chat(paste0("Help improve the below, as a title for a journal submission: ", study_description))
 project_title_logs_GAI_out = gemini_chat("Pick the best. Only give the answer and format as markdown title. Do not format the code", history = project_title_logs_GAI$history)
 
-#### ---- Load data ---------------------------------------------- ####
-
-model_form = as.formula(paste0(outcome_var, "~."))
-
-## Read data
-class(data_path) = Rautoml::get_file_ext(data_path)
-df = Rautoml::upload_data(data_path)
-head(df)
 
 ##### ----- Data dimension --------------------------------------- ####
 df_dim = dim(df)
