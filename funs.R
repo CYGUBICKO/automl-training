@@ -493,3 +493,29 @@ preprocessFun <- function(df, model_form, corr, handle_missing, exclude=NULL) {
 # 	)
 # 	return(x)
 # }
+
+get_excel_param_all <- function(param_file) {
+   out <- sapply(names(param_file), function(p) {
+      p <- param_file[[p]]
+      params <- sapply(colnames(p), function(x){
+         out <- get_excel_param(p[[x]])
+         return(out)
+      }, simplify=FALSE)
+      return(params)
+   }, simplify=FALSE)
+   return(out)
+}
+
+get_excel_param <- function(x) {
+   if (!is.numeric(x)) {
+      check <- grepl("\\[|\\]", x)
+      x <- strsplit(gsub("\\[|\\]|\\(|\\)", "", x), ",")[[1]]
+      if (length(x) > 1) {
+         x <- trimws(x)
+         if (check) {
+            x <- as.numeric(x)
+         }
+      }
+   }
+   return(x)
+}

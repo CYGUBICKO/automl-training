@@ -199,6 +199,9 @@ data_transform_logs = gemini_chat(prompt = paste0("Update the methods based on t
   , maxOutputTokens = max_tockens
 )
 
+#### ---- Hyperparameters ----------------------------------- ####
+source("models_hyperparameters.R")
+
 #### ---- Training control params ----------------------------------- ####
 training_control = trainControl(method = cv_method
 	, repeats = cv_repeats
@@ -234,6 +237,8 @@ rf_train = train(model_form
 	, method = "ranger"
 	, metric = performance_metric
 	, trControl = training_control
+	, tuneGrid = rf_tunegrid
+	, regularization.factor = regularization.factor
 	, importance = 'permutation'
 	, regularization.usedepth = FALSE
 	, save.memory=TRUE

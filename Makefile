@@ -37,6 +37,8 @@ knitbeamer = Rscript -e "library(rmarkdown); render(\"$<\", beamer_presentation(
 simple_ml_pipeline.Rout: simple_ml_pipeline.R
 upload_data.Rout: upload_data.R
 model_config.Rout: model_config.R
+Sources += models_hyperparameters.xlsx 
+models_hyperparameters.Rout: models_hyperparameters.R
 
 funs.Rout: funs.R
 draft_report.pdf: draft_report.Rmd
