@@ -34,6 +34,7 @@ knitbeamer = Rscript -e "library(rmarkdown); render(\"$<\", beamer_presentation(
 
 ######################################################################
 
+requirements.Rout: requirements.R
 simple_ml_pipeline.Rout: simple_ml_pipeline.R
 upload_data.Rout: upload_data.R
 model_config.Rout: model_config.R

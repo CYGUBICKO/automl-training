@@ -38,7 +38,7 @@ source("requirements.R")
 - Copy and paste the API key into the R function below
 
 ```
-Rautoml::setup_caret(GEMINE_API_KEY="YOUR_API_KEY")
+Rautoml::set_api(GEMINE_API_KEY="YOUR_API_KEY")
 ```
 
 
