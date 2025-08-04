@@ -1,18 +1,6 @@
-library(caret) 
-library(recipes) 
+## Install and/or load library
 
-library(forcats)
-library(dplyr)
-
-library(gtsummary)
-
-library(GGally)
-library(ggplot2)
-
-library(MLmetrics)
-library(ROCR)
-
-library(gemini.R)
+source("requirements.R")
 
 #### ---- Set up ------------------------------------------------- ####
 
@@ -260,7 +248,20 @@ gbm_train
 model_name_ = "Gradient boosting"
 gbm_train$model_name_ = model_name_
 
-#### Add models here
+#### ----- Add models here -----
+##### ---- GBM ---------------------------------------- ####
+lasso_train = train(model_form
+	, data = train_df
+	, method = "glmnet"
+	, family = ifelse(problem_type=="classification", "binomial", "gaussian")
+	, metric = performance_metric
+	, trControl = training_control
+)
+lasso_train
+model_name_ = "LASSO"
+lasso_train$model_name_ = model_name_
+
+
 
 #### ---- Predictive performance ------------------------------------------####
 

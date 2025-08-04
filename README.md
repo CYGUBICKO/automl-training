@@ -4,47 +4,47 @@ The pipeline integrates gemini API via [gemini.R package](https://cran.r-project
 
 ## Illustrations
 
+- DGH-DSWB Hackathon 2025 (2025 Aug 06 (Wed))
 - DSWB AGM 2025 (2025 Feb 22 - 23)
 - Data Community meeting at APHRC on 2024 Jun 20 (Thur)
 
 
 ### Requirements
 
-#### Gemini API
+#### R and RStudio
 
-- Get [Gemini API](https://makersuite.google.com/app/apikey)
-- Create a file in the path `~/.Renviron` and paste the API key, i.e.,
+Download and install R.
 
-```
-GEMINE_API_KEY=YOUR_API_KEY
-```
-- Save and close
+- [Windows](https://cran.case.edu/bin/windows/base/)
+- [Mac](https://cran.case.edu/bin/macosx/)
+- [Linux](https://linuxize.com/post/how-to-install-r-on-ubuntu-20-04/)
+
+Next step is to download Rstudio and install
+
+- [Rstudio](https://www.rstudio.com/products/rstudio/download/)
 
 #### R packages
 
-- Install the following R packages
+- Run `R code`:
 
 ```
-install.packages("caret") 
-install.packages("recipes")
-install.packages("forcats")
-install.packages("dplyr")
-install.packages("gtsummary")
-install.packages("GGally")
-install.packages("ggplot2")
-install.packages("MLmetrics")
-install.packages("ROCR")
-install.packages("gemini.R")
-install.packages("naniar")
+source("requirements.R")
+```
 
 
-install.packages("devtools")
-devtools::install_github("aphrc-nocode/Rautoml")
+#### Gemini API
+
+- Get [Gemini API](https://makersuite.google.com/app/apikey)
+- Copy and paste the API key into the R function below
 
 ```
+Rautoml::setup_caret(GEMINE_API_KEY="YOUR_API_KEY")
+```
+
 
 ###  Usage
 
+- Use your own data or dowmload sample data from [here](https://raw.githubusercontent.com/CYGUBICKO/automl-training/refs/heads/main/data/heart_data.csv).
 - Open `simple_ml_pipeline.R` from your preferred editor (Rstudio recommended) and run line by line for default usage. Once you familiarize with the codebase, you can change the data via `data_path`, etc.
 - Edit [upload_data.R](upload_data.R) to specify data
 - Edit [model_config.R](model_config.R) to change default parameters outline above.

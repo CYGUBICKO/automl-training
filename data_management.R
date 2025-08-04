@@ -1,6 +1,7 @@
 #### ---- Data transformation ----------------------------------------- #####
 
 data_management = TRUE
+
 data_transform_logs = list()
 data_transform_logs$outputs = ""
 data_transform_logs$history = list()
@@ -34,16 +35,17 @@ if (!data_management) {
       x =  fct_recode(x, "Yes" = "1", "No" = "0")
       x =  relevel(x, ref="Yes")
     })
-    |> mutate_at("sex", function(x){
+    |> mutate_at("gender", function(x){
       x = as.factor(x)
-      x =  fct_recode(x, "Male" = "1", "Female" = "0")
+      x =  fct_recode(x, "Male" = "male", "Female" = "female")
     })
   )
   
   #### Add any data management steps here as a vector
-  request_text = c("Changed class to factor and assigned 1 to yes and 0 to no"
-    , "In sex variable, assigned 1 to male and 0 to female"
+  request_text = c("Changed watersource to factor and assigned 1 to yes and 0 to no"
+    , "In gender variable, assigned male to Male and female to Female"
   )
+  
   data_transform_logs = gemini_chat(
     prompt = paste0("The following data management steps were performed. Write a detailed methods section for the manuscript. ", paste0(request_text, collapse = ""))
     , history = introduction_logs$history
