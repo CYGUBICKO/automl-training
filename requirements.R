@@ -11,6 +11,8 @@ libs = c(
 	, "gemini.R"
 	, "naniar"
 	, "webshot2"
+	, "remotes"
+	, "DatabaseConnector"
 )
 
 
