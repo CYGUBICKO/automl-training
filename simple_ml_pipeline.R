@@ -28,10 +28,7 @@ ggtheme()
 
 #### ---- Set API KEY -------------------------------------------- #####
 ## API key
-## file.show("~/.Renviron")
-base::readRenviron("~/.Renviron")
-api_key = Sys.getenv("GEMINE_API_KEY")
-setAPI(api_key)
+# Rautoml::set_api("GEMINE_API_KEY", "YOUR_API_KEY")
 
 ## Create outputs folder
 output_path = paste0(current_path, "/", paste0("outputs_", experiment_name))
