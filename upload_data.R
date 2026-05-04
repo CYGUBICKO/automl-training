@@ -1,12 +1,12 @@
 
 ## Study
-experiment_name = "weekly_meeting_demo"
-study_description = "WaSH data from two nairobi slums collected in 2015"
+experiment_name = "DGH-Hackathon"
+study_description = "Heart data collected in Cameroon in DGH Hospital in 2015"
 
 ## Data
-data_path = "C:/Users/scygu/Downloads/Datasets/wash_data.csv"
+data_path = "data/heart_data.csv"
 
 ## Modelling
 problem_type = "classification"
-outcome_var = "watersource"
+outcome_var = "class"
 

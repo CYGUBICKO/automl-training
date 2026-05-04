@@ -35,15 +35,13 @@ if (!data_management) {
       x =  fct_recode(x, "Yes" = "1", "No" = "0")
       x =  relevel(x, ref="Yes")
     })
-    |> mutate_at("gender", function(x){
-      x = as.factor(x)
-      x =  fct_recode(x, "Male" = "male", "Female" = "female")
-    })
+    |> select(-pacemaker)
   )
   
   #### Add any data management steps here as a vector
   request_text = c("Changed watersource to factor and assigned 1 to yes and 0 to no"
     , "In gender variable, assigned male to Male and female to Female"
+    , "The variabe pacrmaker was droped."
   )
   
   data_transform_logs = gemini_chat(
